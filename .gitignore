@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+.vs/
+artifacts/
+*.dll
+*.user
+*.suo
+*.nupkg
+*.snupkg
+__gosf_input.log

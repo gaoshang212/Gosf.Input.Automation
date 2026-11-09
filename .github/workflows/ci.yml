@@ -1,0 +1,118 @@
+name: Build, test and publish
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Validate package version
+        id: version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          [xml]$project = Get-Content src/Gosf.Input.Automation/Gosf.Input.Automation.csproj
+          $version = [string]$project.Project.PropertyGroup.Version
+          if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') { throw 'Invalid package version.' }
+          if ($env:RELEASE_TAG -and $env:RELEASE_TAG -cne "v$version") { throw 'Release tag must match the project version.' }
+          "version=$version" >> $env:GITHUB_OUTPUT
+      - name: Build native x86 and x64 backends
+        run: ./scripts/build-native.ps1
+      - name: Build managed projects
+        run: dotnet build Gosf.Input.Automation.sln -c Release -p:ContinuousIntegrationBuild=true
+      - name: Run window-message regression
+        run: dotnet run --project tests/Gosf.Input.Automation.Tests -c Release --no-build
+      - name: Run DirectInput regression
+        run: dotnet run --project tests/Gosf.Input.Automation.Tests -c Release --no-build -- --dx-only
+      - name: Pack NuGet
+        env:
+          REPOSITORY_URL: ${{ github.server_url }}/${{ github.repository }}
+        run: >-
+          dotnet pack src/Gosf.Input.Automation/Gosf.Input.Automation.csproj -c Release
+          -o artifacts/packages -p:ContinuousIntegrationBuild=true
+          "-p:RepositoryUrl=$env:REPOSITORY_URL" "-p:PackageProjectUrl=$env:REPOSITORY_URL"
+      - name: Test package contents and consumption
+        env:
+          PACKAGE_VERSION: ${{ steps.version.outputs.version }}
+        run: ./scripts/test-package.ps1 -PackageDirectory artifacts/packages -Version $env:PACKAGE_VERSION
+      - name: Archive corresponding native sources
+        env:
+          PACKAGE_VERSION: ${{ steps.version.outputs.version }}
+        run: ./scripts/package-native-sources.ps1 -Version $env:PACKAGE_VERSION
+      - name: Generate checksums
+        run: |
+          Get-ChildItem artifacts/packages -File | Sort-Object Name | ForEach-Object {
+            $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $($_.Name)"
+          } | Set-Content artifacts/packages/SHA256SUMS.txt -Encoding utf8
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: packages
+          path: artifacts/packages/*
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    if: github.event_name == 'release'
+    needs: build
+    runs-on: windows-2022
+    timeout-minutes: 10
+    concurrency:
+      group: nuget-publish
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      id-token: write
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: packages
+          path: packages
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Attach package and sources to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          $assets = (Get-ChildItem packages -File).FullName
+          gh release upload $env:RELEASE_TAG @assets
+          if ($LASTEXITCODE -ne 0) { throw 'Release asset upload failed; NuGet publishing was not attempted.' }
+      - name: Authenticate to NuGet with OIDC
+        uses: NuGet/login@ebc737b6fc418a6ca0073cf116ec8dc156d8b81e # v1
+        id: nuget-login
+        with:
+          user: ${{ vars.NUGET_USER || github.repository_owner }}
+      - name: Publish to nuget.org
+        env:
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+          PACKAGE_VERSION: ${{ needs.build.outputs.version }}
+        run: >-
+          dotnet nuget push "packages/Gosf.Input.Automation.$env:PACKAGE_VERSION.nupkg"
+          --source https://api.nuget.org/v3/index.json --api-key $env:NUGET_API_KEY

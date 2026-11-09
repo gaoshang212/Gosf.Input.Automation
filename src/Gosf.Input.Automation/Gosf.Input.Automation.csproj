@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PackageId>Gosf.Input.Automation</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Gosf.Input.Automation contributors</Authors>
+    <RepositoryType>git</RepositoryType>
+    <Description>Windows foreground and background mouse and keyboard automation.</Description>
+    <PackageTags>windows;automation;mouse;keyboard;input</PackageTags>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>See CHANGELOG.md for release history.</PackageReleaseNotes>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <None Include="../../CHANGELOG.md" Pack="true" PackagePath="/" />
+    <None Include="../../docs/NATIVE-REBUILD.md" Pack="true" PackagePath="docs/" />
+    <None Include="../../LICENSE" Pack="true" PackagePath="/" />
+    <None Include="../../THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="/" />
+    <None Include="../../licenses/op.txt;../../licenses/blackbone.txt;../../licenses/asmjit.txt;../../licenses/minhook.txt;../../licenses/wow64ext-lgpl-3.0.txt;../../licenses/gpl-3.0.txt" Pack="true" PackagePath="licenses/" />
+    <None Include="../../artifacts/gosf-input-automation-native-x64/Release/Gosf.Input.Automation.Native.x64.dll" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" Pack="true" PackagePath="runtimes/win-x64/native/" />
+    <None Include="../../artifacts/gosf-input-automation-native-x86/Release/Gosf.Input.Automation.Native.x86.dll" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" Pack="true" PackagePath="runtimes/win-x86/native/" />
+  </ItemGroup>
+  <Target Name="RequireNativeBackends" BeforeTargets="PrepareForBuild">
+    <Error Condition="!Exists('../../artifacts/gosf-input-automation-native-x64/Release/Gosf.Input.Automation.Native.x64.dll') Or !Exists('../../artifacts/gosf-input-automation-native-x86/Release/Gosf.Input.Automation.Native.x86.dll')" Text="Run scripts/build-native.ps1 to build the x86 and x64 native backends before building the .NET project." />
+  </Target>
+</Project>

@@ -1,0 +1,8 @@
+EXPORTS
+  SetInputHook=_SetInputHook@8
+  ReleaseInputHook=_ReleaseInputHook@0
+  SetInputLock=_SetInputLock@4
+  GetInputCursorShapeHashLow=_GetInputCursorShapeHashLow@0
+  GetInputCursorShapeHashHigh=_GetInputCursorShapeHashHigh@0
+  GetInputCursorShapeMetaLow=_GetInputCursorShapeMetaLow@0
+  GetInputCursorShapeMetaHigh=_GetInputCursorShapeMetaHigh@0
