@@ -111,7 +111,7 @@ jobs:
           gh release upload $env:RELEASE_TAG @assets
           if ($LASTEXITCODE -ne 0) { throw 'Release asset upload failed; NuGet publishing was not attempted.' }
       - name: Authenticate to NuGet with OIDC
-        uses: NuGet/login@ebc737b6fc418a6ca0073cf116ec8dc156d8b81e # v1
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
         id: nuget-login
         with:
           user: ${{ vars.NUGET_USER || github.repository_owner }}
