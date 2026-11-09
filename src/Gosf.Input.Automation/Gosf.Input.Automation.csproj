@@ -8,6 +8,8 @@
     <Version>0.1.0</Version>
     <Authors>Gosf.Input.Automation contributors</Authors>
     <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/gaoshang212/Gosf.Input.Automation</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/gaoshang212/Gosf.Input.Automation</PackageProjectUrl>
     <Description>Windows foreground and background mouse and keyboard automation.</Description>
     <PackageTags>windows;automation;mouse;keyboard;input</PackageTags>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>

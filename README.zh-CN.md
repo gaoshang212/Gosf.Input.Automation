@@ -107,7 +107,7 @@ WPF 测试默认使用 `DirectInput`，只测试后台。控制器启动独立 W
 
 打包后可将 `artifacts/Gosf.Input.Automation.*.nupkg` 发布到 NuGet；发布者应先确认包 ID、版本、作者信息、仓库地址和 NuGet 账户权限。
 
-确定仓库地址和作者后，可在打包时传入 `-p:RepositoryUrl=<仓库地址> -p:Authors=<作者>`。完成下方第三方许可核查后，通过 GitHub Release 触发发布：工作流使用 NuGet Trusted Publishing（OIDC）获取短期凭据，无需保存长期 API key。配置 nuget.org 信任策略后，登录用户名默认使用 GitHub 仓库 owner；若与 NuGet 用户名不同，可通过仓库或组织级变量 `NUGET_USER` 覆盖，具体步骤见 [发布指南](docs/RELEASING.md)。
+项目已配置 [GitHub 仓库](https://github.com/gaoshang212/Gosf.Input.Automation)作为 NuGet 包的仓库和项目链接；如需调整包作者，可在打包时传入 `-p:Authors=<作者>`。完成下方第三方许可核查后，通过 GitHub Release 触发发布：工作流使用 NuGet Trusted Publishing（OIDC）获取短期凭据，无需保存长期 API key。配置 nuget.org 信任策略后，登录用户名默认使用 GitHub 仓库 owner；若与 NuGet 用户名不同，可通过仓库或组织级变量 `NUGET_USER` 覆盖，具体步骤见 [发布指南](docs/RELEASING.md)。
 
 ## 许可证
 

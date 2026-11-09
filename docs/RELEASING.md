@@ -2,7 +2,7 @@
 
 ## One-time repository setup
 
-1. Create the public GitHub repository and push the source. No repository URL is hard-coded: workflows derive package metadata from `github.repository`.
+1. Push the source to [gaoshang212/Gosf.Input.Automation](https://github.com/gaoshang212/Gosf.Input.Automation). The project supplies this URL as the default package repository and project link; workflows derive these links from `github.repository` when building on GitHub.
 2. Confirm ownership/availability of the `Gosf.Input.Automation` package ID on nuget.org and review package author metadata.
 3. On nuget.org, create a **Trusted Publishing** policy for the GitHub repository owner and repository name. Set **Workflow File** to `ci.yml` (the filename only). Leave **Environment** empty: this workflow does not use a GitHub Actions environment. Choose the policy owner and package scopes that allow publishing `Gosf.Input.Automation`, including creating the package if it has not been published yet. See [NuGet Trusted Publishing](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing).
 4. The NuGet username defaults to the GitHub repository owner (`github.repository_owner`). If your nuget.org username differs, set `NUGET_USER` under GitHub **Settings → Secrets and variables → Actions → Variables** to override it (profile name, not email). An organization-level variable shared with this repository also works. For organization-owned repositories, the default is the organization name; override it when the NuGet login username differs. No long-lived API key secret is required.
