@@ -27,4 +27,6 @@ dotnet pack src/Gosf.Input.Automation/Gosf.Input.Automation.csproj -c Release -o
 
 Alternatively, replace the matching native DLL in your application's output directory with your rebuilt DLL. Preserve the filename and architecture. The managed library resolves the DLL according to the calling process architecture. Close the caller and target processes first so that no original or injected module remains loaded.
 
+For .NET Framework consumers, replace both the architecture-specific DLL and its `Gosf.Input.Automation.Native.dll` loader alias under the matching `native/x86/` or `native/x64/` directory. Both files must contain the same rebuilt binary so that local input and injected input use the same implementation.
+
 The project-owned MIT code permits modification and rebuilding; dependency terms are in `licenses/` and the bundled dependency trees. See [THIRD-PARTY-NOTICES.md](../THIRD-PARTY-NOTICES.md). Providing these materials is not a claim that all distribution obligations have been independently audited.

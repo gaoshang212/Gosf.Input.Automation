@@ -4,7 +4,7 @@ English | [简体中文](README.zh-CN.md)
 
 A C# library for mouse and keyboard automation on Windows. The native backend is derived from the input code in [op 0.4.8.3](https://github.com/WallBreaker2/op). It preserves upstream attribution and license notices.
 
-Requires Windows 10 or later, .NET 8 or later, and an x86 or x64 calling process. ARM64 processes are not supported. You supply the target window handle; the library does not locate windows.
+Requires Windows 10 or later, .NET Framework 4.6.2 or later / .NET 8 or later, and an x86 or x64 calling process. ARM64 processes are not supported. You supply the target window handle; the library does not locate windows.
 
 ## Features
 
@@ -73,6 +73,17 @@ dotnet pack src/Gosf.Input.Automation/Gosf.Input.Automation.csproj -c Release -o
 ```
 
 Native dependencies are pinned in CMake. Generated DLLs and packages stay in ignored `artifacts/`. NuGet consumers receive both native architectures and do not need C++ tools.
+
+The package includes `net462` and `net8.0-windows` assemblies. For .NET Framework, NuGet build targets copy the native backends into `native/x86/` and `native/x64/` beside the managed assembly. Keep these directories when deploying. Each contains the original architecture-specific DLL used for injection and a loader alias. The caller's process bitness selects the backend at runtime, including for AnyCPU applications. The public API is the same on both frameworks.
+
+Validate the .NET Framework package with both process architectures:
+
+```powershell
+./scripts/test-package.ps1 -PackageDirectory artifacts/packages -Version 0.1.0 -TargetFramework net462 -Platform x86
+./scripts/test-package.ps1 -PackageDirectory artifacts/packages -Version 0.1.0 -TargetFramework net462 -Platform x64
+```
+
+These tests compile against .NET Framework 4.6.2 reference assemblies and exercise window messages, DirectInput, Unicode, paths, and argument validation in standalone consumers. They run on the installed .NET Framework 4.x runtime; a machine with only the 4.6.2 runtime is not covered by this check. The .NET Framework reference assemblies are restored as a build-only dependency.
 
 The tests are executable regression runners, not `dotnet test` projects. They create temporary windows; DirectInput tests inject only into their own target process. WPF tests assert actual control results and check that the target stays in the background. Use an interactive Windows desktop and avoid touching test windows. Hosted CI runs the WinForms message and DirectInput regressions; WPF desktop validation is a separate local release check.
 

@@ -39,7 +39,7 @@ public sealed class InputSession : IDisposable
 
     public bool LockInput(InputLock mode)
     {
-        if (!Enum.IsDefined(mode)) throw new ArgumentOutOfRangeException(nameof(mode));
+        if (!Enum.IsDefined(typeof(InputLock), mode)) throw new ArgumentOutOfRangeException(nameof(mode));
         return NativeMethods.GosfLockInput(handle, (int)mode) == 1;
     }
 
@@ -67,7 +67,7 @@ public sealed class InputSession : IDisposable
     public bool SetMouseTrajectory(TrajectoryMode mode, int minDurationMilliseconds, int maxDurationMilliseconds,
         int jitter, int startDelayMilliseconds, int endDelayMilliseconds)
     {
-        if (!Enum.IsDefined(mode)) throw new ArgumentOutOfRangeException(nameof(mode));
+        if (!Enum.IsDefined(typeof(TrajectoryMode), mode)) throw new ArgumentOutOfRangeException(nameof(mode));
         NonNegative(minDurationMilliseconds); NonNegative(maxDurationMilliseconds);
         NonNegative(startDelayMilliseconds); NonNegative(endDelayMilliseconds);
         if (maxDurationMilliseconds != 0 && maxDurationMilliseconds < minDurationMilliseconds)
@@ -141,7 +141,7 @@ public sealed class InputSession : IDisposable
     {
         Text(text, nameof(text));
         NonNegative(delayMilliseconds);
-        ObjectDisposedException.ThrowIf(handle.IsClosed, this);
+        if (handle.IsClosed) throw new ObjectDisposedException(nameof(InputSession));
         return text.Length == 0 || NativeMethods.GosfKeyPressStr(handle, text, delayMilliseconds) == 1;
     }
 
@@ -151,8 +151,8 @@ public sealed class InputSession : IDisposable
     private static int NonNegative(int value) => value >= 0 ? value : throw new ArgumentOutOfRangeException(nameof(value));
     private static string Text(string value, string name)
     {
-        ArgumentNullException.ThrowIfNull(value, name);
-        if (value.Contains('\0')) throw new ArgumentException("Embedded NUL is not supported.", name);
+        if (value == null) throw new ArgumentNullException(name);
+        if (value.IndexOf('\0') >= 0) throw new ArgumentException("Embedded NUL is not supported.", name);
         return value;
     }
 
@@ -177,16 +177,16 @@ public sealed class InputSession : IDisposable
 
     private static string FormatPath(IReadOnlyList<Point> points)
     {
-        ArgumentNullException.ThrowIfNull(points);
+        if (points == null) throw new ArgumentNullException(nameof(points));
         if (points.Count < 2 || points.All(p => p == points[0]))
             throw new ArgumentException("A path must contain at least two different points.", nameof(points));
-        return string.Join('|', points.Select(p => FormattableString.Invariant($"{p.X},{p.Y}")));
+        return string.Join("|", points.Select(p => FormattableString.Invariant($"{p.X},{p.Y}")));
     }
 
     private static bool CheckDirectInputTarget(nint window)
     {
         // shortcut: op cross-bitness DX can hang or crash, lift this guard after upstream fixes it.
-        if (RuntimeInformation.OSArchitecture is not (Architecture.X86 or Architecture.X64))
+        if (!IsDirectInputOperatingSystemSupported())
             throw new PlatformNotSupportedException("DirectInput requires an x86 or x64 Windows installation.");
         if (NativeMethods.GetWindowThreadProcessId(window, out uint processId) == 0) return false;
         using var process = NativeMethods.OpenProcess(0x1000, false, processId);
@@ -195,5 +195,14 @@ public sealed class InputSession : IDisposable
         if (targetIs64Bit != Environment.Is64BitProcess)
             throw new PlatformNotSupportedException("DirectInput requires the caller and target to have the same bitness.");
         return true;
+    }
+
+    private static bool IsDirectInputOperatingSystemSupported()
+    {
+#if NETFRAMEWORK
+        return FrameworkNativeLoader.IsSupportedOSArchitecture();
+#else
+        return RuntimeInformation.OSArchitecture is Architecture.X86 or Architecture.X64;
+#endif
     }
 }

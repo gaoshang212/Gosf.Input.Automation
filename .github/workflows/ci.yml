@@ -33,7 +33,7 @@ jobs:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           [xml]$project = Get-Content src/Gosf.Input.Automation/Gosf.Input.Automation.csproj
-          $version = [string]$project.Project.PropertyGroup.Version
+          $version = $project.SelectSingleNode('/Project/PropertyGroup/Version').InnerText
           if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') { throw 'Invalid package version.' }
           if ($env:RELEASE_TAG -and $env:RELEASE_TAG -cne "v$version") { throw 'Release tag must match the project version.' }
           "version=$version" >> $env:GITHUB_OUTPUT
@@ -56,6 +56,12 @@ jobs:
         env:
           PACKAGE_VERSION: ${{ steps.version.outputs.version }}
         run: ./scripts/test-package.ps1 -PackageDirectory artifacts/packages -Version $env:PACKAGE_VERSION
+      - name: Test net462 package on x86 and x64
+        env:
+          PACKAGE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          ./scripts/test-package.ps1 -PackageDirectory artifacts/packages -Version $env:PACKAGE_VERSION -TargetFramework net462 -Platform x86
+          ./scripts/test-package.ps1 -PackageDirectory artifacts/packages -Version $env:PACKAGE_VERSION -TargetFramework net462 -Platform x64
       - name: Archive corresponding native sources
         env:
           PACKAGE_VERSION: ${{ steps.version.outputs.version }}

@@ -7,6 +7,7 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- .NET Framework 4.6.2 target with automatic x86/x64 native deployment, Framework-compatible loading, and packaged input regressions on both architectures.
 - Initial .NET 8 Windows API for foreground, window-message, DirectInput, and scan-code input.
 - Window binding with separate display and input handles and cross-bitness DirectInput validation.
 - Mouse buttons, scrolling, cursor queries, smooth movement, paths, and dragging.

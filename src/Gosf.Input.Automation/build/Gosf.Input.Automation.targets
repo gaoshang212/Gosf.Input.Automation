@@ -1,0 +1,36 @@
+<Project>
+  <!-- A named target also avoids double inclusion when both package import paths are used. -->
+  <PropertyGroup>
+    <_GosfNativePackageRoot Condition="'$(_GosfNativePackageRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\'))</_GosfNativePackageRoot>
+    <_GosfNativeX86 Condition="'$(_GosfNativeX86)' == ''">$(_GosfNativePackageRoot)runtimes\win-x86\native\Gosf.Input.Automation.Native.x86.dll</_GosfNativeX86>
+    <_GosfNativeX64 Condition="'$(_GosfNativeX64)' == ''">$(_GosfNativePackageRoot)runtimes\win-x64\native\Gosf.Input.Automation.Native.x64.dll</_GosfNativeX64>
+  </PropertyGroup>
+  <Target Name="GosfIncludeFrameworkNative" BeforeTargets="AssignTargetPaths" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
+    <ItemGroup>
+      <Content Include="$(_GosfNativeX86)">
+        <Link>native\x86\Gosf.Input.Automation.Native.x86.dll</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <Pack>false</Pack>
+      </Content>
+      <Content Include="$(_GosfNativeX86)">
+        <Link>native\x86\Gosf.Input.Automation.Native.dll</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <Pack>false</Pack>
+      </Content>
+      <Content Include="$(_GosfNativeX64)">
+        <Link>native\x64\Gosf.Input.Automation.Native.x64.dll</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <Pack>false</Pack>
+      </Content>
+      <Content Include="$(_GosfNativeX64)">
+        <Link>native\x64\Gosf.Input.Automation.Native.dll</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <Pack>false</Pack>
+      </Content>
+    </ItemGroup>
+  </Target>
+</Project>

@@ -12,7 +12,7 @@
 
 1. Set `Version` in `src/Gosf.Input.Automation/Gosf.Input.Automation.csproj`. Use `major.minor.patch` or `major.minor.patch-prerelease` (no build metadata).
 2. Move completed `Unreleased` entries into a dated section for that version. The initial `0.1.0` is planned, not recorded as released.
-3. Run CI plus x86/x64 WPF regressions on an interactive Windows desktop. CI does not certify all desktop behavior.
+3. Run CI (including net462 package regressions on x86 and x64) plus x86/x64 WPF regressions on an interactive Windows desktop. CI does not certify all desktop behavior. The net462 tests compile against 4.6.2 reference assemblies and run on the installed Framework 4.x runtime.
 4. Review third-party notices and distribution terms, especially the statically linked LGPL WOW64Ext component. Check the source archive, retained notices, and successful rebuilding with modified component sources. Do not describe the entire binary package as MIT-only.
 5. Commit all release changes. Publish a GitHub Release with tag `v<Version>`, such as `v0.1.0` or `v0.2.0-rc.1`, at that commit.
 

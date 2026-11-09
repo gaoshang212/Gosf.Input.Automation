@@ -12,8 +12,11 @@ internal sealed class AutomationHandle : SafeHandleZeroOrMinusOneIsInvalid
 
 internal static class NativeMethods
 {
+#if NETFRAMEWORK
+    private const string Library = "Gosf.Input.Automation.Native.dll";
+    static NativeMethods() => FrameworkNativeLoader.Load();
+#else
     private const string Library = "Gosf.Input.Automation.Native";
-
     static NativeMethods() => NativeLibrary.SetDllImportResolver(typeof(NativeMethods).Assembly, Resolve);
 
     private static nint Resolve(string name, Assembly assembly, DllImportSearchPath? searchPath)
@@ -28,6 +31,7 @@ internal static class NativeMethods
         };
         return NativeLibrary.Load(native, assembly, searchPath);
     }
+#endif
 
     [DllImport(Library, CallingConvention = CallingConvention.StdCall)] internal static extern AutomationHandle GosfCreate();
     [DllImport(Library, CallingConvention = CallingConvention.StdCall)] internal static extern void GosfDestroy(nint handle);

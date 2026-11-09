@@ -4,7 +4,7 @@
 
 Windows 鼠标、键盘自动化 C# 库。原生后端基于 [op 0.4.8.3](https://github.com/WallBreaker2/op) 的输入源码裁剪，保留原始来源和许可声明。仓库只保存源码；构建出的 `Gosf.Input.Automation.Native.x86.dll` 和 `Gosf.Input.Automation.Native.x64.dll` 位于已忽略的 `artifacts/`，打包时才进入 NuGet 包。原生源码位于 `src/Gosf.Input.Automation.Native/core`。
 
-目标平台：Windows 10 或更新版本、.NET 8 或更新版本；调用进程须为 x86 或 x64。需要用户自己的目标窗口句柄，库不负责查找窗口。
+目标平台：Windows 10 或更新版本、.NET Framework 4.6.2 或更新版本 / .NET 8 或更新版本；调用进程须为 x86 或 x64。需要用户自己的目标窗口句柄，库不负责查找窗口。
 
 ## 支持的功能
 
@@ -72,6 +72,17 @@ GitHub Actions 的构建与 NuGet 发布步骤见 [发布指南](docs/RELEASING.
 ```
 
 然后构建、测试和打包 .NET 项目。源码仓库没有预编译 DLL；直接执行 `dotnet build` 会提示先运行上述脚本。NuGet 包会包含这两份生成的 DLL，使用 NuGet 包的项目不需要 C++ 构建工具。
+
+NuGet 包同时包含 `net462` 和 `net8.0-windows` 程序集，公共 API 一致。.NET Framework 项目通过包内 MSBuild targets 自动复制原生后端到程序集旁的 `native/x86/`、`native/x64/`，部署时需保留这两个目录及其中的 DLL；运行时按进程位数自动选择。每个目录同时包含注入使用的原始文件名和供 Framework 加载的别名。构建时通过仅开发依赖的引用程序集包获取 .NET Framework 4.6.2 API，无需安装对应 Developer Pack。
+
+打包后可验证 Framework 的双架构输入和包消费：
+
+```powershell
+./scripts/test-package.ps1 -PackageDirectory artifacts/packages -Version 0.1.0 -TargetFramework net462 -Platform x86
+./scripts/test-package.ps1 -PackageDirectory artifacts/packages -Version 0.1.0 -TargetFramework net462 -Platform x64
+```
+
+上述测试针对 4.6.2 引用程序集编译，并在本机安装的 Framework 4.x 运行时执行窗口消息、DirectInput、Unicode、路径及参数校验；不代表已在仅安装 4.6.2 的系统验证。WPF 控件回归的验证范围仍为下述 .NET 8 测试。
 
 ```powershell
 dotnet build Gosf.Input.Automation.sln -c Release
