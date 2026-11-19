@@ -20,7 +20,7 @@ A `true` result means the backend reported success; it does not guarantee that t
 
 ## Installation and usage
 
-Once the package is published:
+Install from NuGet:
 
 ```powershell
 dotnet add package Gosf.Input.Automation
@@ -54,9 +54,12 @@ For shortcuts, use `KeyDown("ctrl")`, `KeyPress("a")`, and `KeyUp("ctrl")`. See 
 
 - `WindowMessage` sends window messages without changing real keyboard state or activating the target. Applications using Raw Input, DirectInput, global key state, or custom input handling may ignore it.
 - `DirectInput` injects the matching native module and installs hooks. Caller and target must have the same bitness; cross-bitness binding throws `PlatformNotSupportedException`. Permissions, protected processes, and application behavior affect compatibility.
+- Binding to a window in the current process calls the hook exports directly. The native module remains loaded until process exit; successful unbinding still removes the hooks.
 - For WPF, use both `MouseMode.DirectInput` and `KeyboardMode.DirectInput`. On `HwndWrapper[` windows, hooks emulate mouse position, focus, capture, and keyboard state on the target UI thread. Input enters the normal WPF message pipeline.
 - Local WPF validation covers .NET 8 x86/x64 Button, TextBox, Slider, and ScrollViewer controls. WPF support requires Windows 10 1607 or later. Ordinary keys, Shift/Ctrl, and Unicode text are covered. IME composition, dead keys, AltGr, system shortcuts, cross-HWND popups, HwndHost, multiple UI threads, hidden/minimized windows, and other WPF versions are not supported or have not been validated.
 - WPF hooks suppress real mouse messages to the target while bound. Avoid manually interacting with the same window during automation. Unbinding clears virtual capture and focus before removing hooks.
+- WPF OLE drag-and-drop (`DragDrop.DoDragDrop`) is unsupported during virtual input. Such calls are cancelled and the triggering input returns `false`; ordinary mouse dragging within a window remains available.
+- If `UnbindWindow()` returns `false`, retain the session and retry unbinding. Mouse and keyboard operations are rejected while cleanup is pending; successful cleanup restores the default foreground backends.
 - Windows integrity levels restrict input and messages sent to elevated windows. Run at a suitable permission level. See [PostMessage](https://learn.microsoft.com/windows/win32/api/winuser/nf-winuser-postmessagew) and [SendInput](https://learn.microsoft.com/windows/win32/api/winuser/nf-winuser-sendinput).
 
 ## Build and test
@@ -79,8 +82,8 @@ The package includes `net462` and `net8.0-windows` assemblies. For .NET Framewor
 Validate the .NET Framework package with both process architectures:
 
 ```powershell
-./scripts/test-package.ps1 -PackageDirectory artifacts/packages -Version 0.1.0 -TargetFramework net462 -Platform x86
-./scripts/test-package.ps1 -PackageDirectory artifacts/packages -Version 0.1.0 -TargetFramework net462 -Platform x64
+./scripts/test-package.ps1 -PackageDirectory artifacts/packages -Version 0.1.1 -TargetFramework net462 -Platform x86
+./scripts/test-package.ps1 -PackageDirectory artifacts/packages -Version 0.1.1 -TargetFramework net462 -Platform x64
 ```
 
 These tests compile against .NET Framework 4.6.2 reference assemblies and exercise window messages, DirectInput, Unicode, paths, and argument validation in standalone consumers. They run on the installed .NET Framework 4.x runtime; a machine with only the 4.6.2 runtime is not covered by this check. The .NET Framework reference assemblies are restored as a build-only dependency.

@@ -37,6 +37,7 @@ long DxMouse::Bind(HWND h, int mode) {
 
 long DxMouse::UnBind() {
     const long ret = input_hook_client::UnBind(_hwnd);
+    if (ret != 1) return ret;
     _hwnd = 0;
     _mode = 0;
     _x = _y = 0;

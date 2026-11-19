@@ -22,16 +22,14 @@ long BindingSession::BindWindow(LONG_PTR hwnd, const std::wstring &display, cons
 
 long BindingSession::BindWindowEx(LONG_PTR display_hwnd, LONG_PTR input_hwnd, const std::wstring &display,
                                   const std::wstring &mouse, const std::wstring &keypad, long mode) {
-    reset_bind_state(false);
+    if (reset_bind_state(false) != 1) return 0;
     (void)mode;
-
     HWND displayWnd = display_hwnd == 0 ? GetDesktopWindow() : reinterpret_cast<HWND>(display_hwnd);
     HWND inputWnd = input_hwnd == 0 ? displayWnd : reinterpret_cast<HWND>(input_hwnd);
     if (!::IsWindow(displayWnd) || !::IsWindow(inputWnd) || display != L"normal") {
         reset_bind_state(true);
         return 0;
     }
-
     int mouseMode = mouse == L"normal" ? IN_NORMAL : mouse == L"windows" ? IN_WINDOWS : mouse == L"dx" ? IN_DX : -1;
     int keypadMode = keypad == L"normal" ? IN_NORMAL : keypad == L"normal.hd" ? IN_NORMAL2 :
                      keypad == L"windows" ? IN_WINDOWS : keypad == L"dx" ? IN_DX : -1;
@@ -39,7 +37,16 @@ long BindingSession::BindWindowEx(LONG_PTR display_hwnd, LONG_PTR input_hwnd, co
         reset_bind_state(true);
         return 0;
     }
+    configure_backends(displayWnd, inputWnd, mouseMode, keypadMode);
+    if (_mouse->Bind(inputWnd, mouseMode) != 1 || _keyboard->Bind(inputWnd, keypadMode) != 1) {
+        reset_bind_state(true);
+        return 0;
+    }
+    _is_bind = 1;
+    return 1;
+}
 
+void BindingSession::configure_backends(HWND displayWnd, HWND inputWnd, int mouseMode, int keypadMode) {
     _display_hwnd = displayWnd;
     _input_hwnd = inputWnd;
     _mouse_mode = mouseMode;
@@ -53,13 +60,6 @@ long BindingSession::BindWindowEx(LONG_PTR display_hwnd, LONG_PTR input_hwnd, co
     else
         _keyboard = std::make_unique<gosf::input::WinKeyboard>();
 
-    if (_mouse->Bind(inputWnd, mouseMode) != 1 || _keyboard->Bind(inputWnd, keypadMode) != 1) {
-        reset_bind_state(true);
-        return 0;
-    }
-
-    _is_bind = 1;
-    return 1;
 }
 
 long BindingSession::UnBindWindow() {
@@ -71,7 +71,7 @@ long BindingSession::LockInput(long lock) {
         return 0;
     if (lock == 0)
         return gosf::hook::input_hook_client::LockInput(_input_hwnd, 0);
-    if (!_is_bind || !_input_hwnd)
+    if (_cleanup_pending || !_is_bind || !_input_hwnd)
         return 0;
 
     const bool need_mouse = lock == 1 || lock == 2;
@@ -85,23 +85,24 @@ long BindingSession::reset_bind_state(bool restore_default_input) {
     if (_input_hwnd && (_mouse_mode == IN_DX || _keypad_mode == IN_DX))
         gosf::hook::input_hook_client::LockInput(_input_hwnd, 0);
 
+    // Preserve the backend and binding metadata when cleanup fails, so callers
+    // can retry instead of losing track of live hooks in the target process.
+    _cleanup_pending = true;
+    if (_mouse && _mouse->UnBind() != 1) return 0;
+    if (_keyboard && _keyboard->UnBind() != 1) return 0;
+
     _display_hwnd = nullptr;
     _input_hwnd = nullptr;
     _is_bind = 0;
     _mouse_mode = IN_NORMAL;
     _keypad_mode = IN_NORMAL;
-    if (_mouse) {
-        _mouse->UnBind();
-        _mouse.reset();
-    }
-    if (_keyboard) {
-        _keyboard->UnBind();
-        _keyboard.reset();
-    }
+    _mouse.reset();
+    _keyboard.reset();
     if (restore_default_input) {
         _mouse = std::make_unique<gosf::input::WinMouse>();
         _keyboard = std::make_unique<gosf::input::WinKeyboard>();
     }
+    _cleanup_pending = false;
     return 1;
 }
 

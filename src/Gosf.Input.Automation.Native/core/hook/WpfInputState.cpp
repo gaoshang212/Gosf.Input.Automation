@@ -2,6 +2,7 @@
 #include "ApiResolver.h"
 #include <cwchar>
 #include <atomic>
+#include <Ole2.h>
 
 namespace gosf::hook::wpf_input {
 namespace {
@@ -13,6 +14,8 @@ POINT cursor = {};
 HWND focus = nullptr;
 HWND capture = nullptr;
 WNDPROC windowProcedure = nullptr;
+bool unsupportedOleDrag = false;
+decltype(&DoDragDrop) originalDoDragDrop = nullptr;
 decltype(&GetCursorPos) originalGetCursorPos = nullptr;
 decltype(&GetMessagePos) originalGetMessagePos = nullptr;
 decltype(&WindowFromPoint) originalWindowFromPoint = nullptr;
@@ -93,6 +96,20 @@ BOOL WINAPI VirtualReleaseCapture() {
     return TRUE;
 }
 
+HRESULT WINAPI VirtualDoDragDrop(IDataObject* data, IDropSource* source, DWORD allowed, DWORD* effect) {
+    if (!ActiveThread()) return originalDoDragDrop(data, source, allowed, effect);
+    // OLE owns a desktop-level loop/capture, which this virtual window cannot support.
+    unsupportedOleDrag = true;
+    if (effect) *effect = DROPEFFECT_NONE;
+    return DRAGDROP_S_CANCEL;
+}
+
+bool InstallOleGuard(HookInstaller install) {
+    if (!GetModuleHandleW(L"ole32.dll") && !LoadLibraryW(L"ole32.dll")) return false;
+    return install(ResolveApi("ole32.dll", "DoDragDrop"), reinterpret_cast<void*>(VirtualDoDragDrop),
+        reinterpret_cast<void**>(&originalDoDragDrop));
+}
+
 template<typename T>
 bool Add(HookInstaller install, const char* name, T detour, T& original) {
     return install(ResolveApi("user32.dll", name), reinterpret_cast<void*>(detour),
@@ -132,7 +149,14 @@ bool Install(HWND hwnd, HookInstaller install) {
     if (!cleanupMessage) return false;
     target = hwnd;
     targetThread = GetWindowThreadProcessId(hwnd, nullptr);
-    return InstallCursorHooks(install) && InstallFocusHooks(install) && InstallCaptureHooks(install);
+    return InstallCursorHooks(install) && InstallFocusHooks(install) && InstallCaptureHooks(install)
+        && InstallOleGuard(install);
+}
+
+bool TakeUnsupportedOleDrag() {
+    const bool rejected = unsupportedOleDrag;
+    unsupportedOleDrag = false;
+    return rejected;
 }
 
 void PrepareMessage(HWND hwnd, UINT message, LPARAM lparam, WNDPROC original) {
@@ -193,6 +217,7 @@ void Reset() {
     cursor = {};
     windowProcedure = nullptr;
     cleanupMessage = 0;
+    unsupportedOleDrag = false;
 }
 }
 

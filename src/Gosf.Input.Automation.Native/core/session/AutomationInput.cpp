@@ -15,6 +15,7 @@
 namespace {
 
 using gosf::input::KeyboardBackend;
+using gosf::input::WinMouse;
 
 struct key_combo_t {
     long vk = 0;
@@ -130,27 +131,27 @@ void gosf::AutomationCore::IsBind(long *ret) {
 void gosf::AutomationCore::GetCursorPos(long *x, long *y, long *ret) {
     long cursor_x = 0;
     long cursor_y = 0;
-    internal::set_result(ret, m_context->bkproc._mouse->GetCursorPos(cursor_x, cursor_y));
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::GetCursorPos, cursor_x, cursor_y));
     internal::set_result(x, cursor_x);
     internal::set_result(y, cursor_y);
 }
 
 void gosf::AutomationCore::GetCursorShape(std::wstring &ret) {
-    m_context->bkproc._mouse->GetCursorShape(ret);
+    if (!m_context->bkproc.Mouse(&WinMouse::GetCursorShape, ret)) ret.clear();
 }
 
 void gosf::AutomationCore::MoveR(long x, long y, long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->MoveR(x, y));
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::MoveR, x, y));
 }
 
 void gosf::AutomationCore::MoveTo(long x, long y, long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->MoveTo(x, y));
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::MoveTo, x, y));
 }
 
 void gosf::AutomationCore::MoveToEx(long x, long y, long w, long h, std::wstring &ret) {
     int dst_x = x;
     int dst_y = y;
-    if (m_context->bkproc._mouse->MoveToEx(x, y, w, h, dst_x, dst_y)) {
+    if (m_context->bkproc.Mouse(&WinMouse::MoveToEx, x, y, w, h, dst_x, dst_y)) {
         ret = std::to_wstring(dst_x) + L"," + std::to_wstring(dst_y);
     } else {
         ret.clear();
@@ -158,13 +159,13 @@ void gosf::AutomationCore::MoveToEx(long x, long y, long w, long h, std::wstring
 }
 
 void gosf::AutomationCore::MoveToSmooth(long x, long y, long duration, long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->MoveToSmooth(x, y, duration));
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::MoveToSmooth, x, y, duration));
 }
 
 void gosf::AutomationCore::MoveToExSmooth(long x, long y, long w, long h, long duration, std::wstring &ret) {
     int dst_x = x;
     int dst_y = y;
-    if (m_context->bkproc._mouse->MoveToExSmooth(x, y, w, h, duration, dst_x, dst_y)) {
+    if (m_context->bkproc.Mouse(&WinMouse::MoveToExSmooth, x, y, w, h, duration, dst_x, dst_y)) {
         ret = std::to_wstring(dst_x) + L"," + std::to_wstring(dst_y);
     } else {
         ret.clear();
@@ -172,115 +173,115 @@ void gosf::AutomationCore::MoveToExSmooth(long x, long y, long w, long h, long d
 }
 
 void gosf::AutomationCore::MovePath(const wchar_t *path, long duration, long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->MovePath(path ? path : L"", duration));
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::MovePath, path ? path : L"", duration));
 }
 
 void gosf::AutomationCore::DragPath(const wchar_t *path, long duration, long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->DragPath(path ? path : L"", duration));
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::DragPath, path ? path : L"", duration));
 }
 
 void gosf::AutomationCore::SetMouseTrajectory(long mode, long min_duration, long max_duration, long jitter, long start_delay,
                                 long end_delay, long *ret) {
-    const long result = m_context->bkproc._mouse->SetMouseTrajectory(
+    const long result = m_context->bkproc.Mouse(&WinMouse::SetMouseTrajectory,
         static_cast<int>(mode), static_cast<int>(min_duration), static_cast<int>(max_duration),
         static_cast<int>(jitter), static_cast<int>(start_delay), static_cast<int>(end_delay));
     internal::set_result(ret, result);
 }
 
 void gosf::AutomationCore::LeftClick(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->LeftClick());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::LeftClick));
 }
 
 void gosf::AutomationCore::LeftDoubleClick(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->LeftDoubleClick());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::LeftDoubleClick));
 }
 
 void gosf::AutomationCore::LeftDown(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->LeftDown());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::LeftDown));
 }
 
 void gosf::AutomationCore::LeftUp(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->LeftUp());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::LeftUp));
 }
 
 void gosf::AutomationCore::MiddleClick(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->MiddleClick());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::MiddleClick));
 }
 
 void gosf::AutomationCore::MiddleDoubleClick(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->MiddleDoubleClick());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::MiddleDoubleClick));
 }
 
 void gosf::AutomationCore::MiddleDown(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->MiddleDown());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::MiddleDown));
 }
 
 void gosf::AutomationCore::MiddleUp(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->MiddleUp());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::MiddleUp));
 }
 
 void gosf::AutomationCore::RightClick(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->RightClick());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::RightClick));
 }
 
 void gosf::AutomationCore::RightDoubleClick(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->RightDoubleClick());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::RightDoubleClick));
 }
 
 void gosf::AutomationCore::RightDown(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->RightDown());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::RightDown));
 }
 
 void gosf::AutomationCore::RightUp(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->RightUp());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::RightUp));
 }
 
 void gosf::AutomationCore::XButton1Click(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->XButton1Click());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::XButton1Click));
 }
 
 void gosf::AutomationCore::XButton1DoubleClick(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->XButton1DoubleClick());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::XButton1DoubleClick));
 }
 
 void gosf::AutomationCore::XButton1Down(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->XButton1Down());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::XButton1Down));
 }
 
 void gosf::AutomationCore::XButton1Up(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->XButton1Up());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::XButton1Up));
 }
 
 void gosf::AutomationCore::XButton2Click(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->XButton2Click());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::XButton2Click));
 }
 
 void gosf::AutomationCore::XButton2DoubleClick(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->XButton2DoubleClick());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::XButton2DoubleClick));
 }
 
 void gosf::AutomationCore::XButton2Down(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->XButton2Down());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::XButton2Down));
 }
 
 void gosf::AutomationCore::XButton2Up(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->XButton2Up());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::XButton2Up));
 }
 
 void gosf::AutomationCore::Wheel(long delta, long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->Wheel(delta));
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::Wheel, delta));
 }
 
 void gosf::AutomationCore::HWheel(long delta, long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->HWheel(delta));
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::HWheel, delta));
 }
 
 void gosf::AutomationCore::WheelDown(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->WheelDown());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::WheelDown));
 }
 
 void gosf::AutomationCore::WheelUp(long *ret) {
-    internal::set_result(ret, m_context->bkproc._mouse->WheelUp());
+    internal::set_result(ret, m_context->bkproc.Mouse(&WinMouse::WheelUp));
 }
 
 void gosf::AutomationCore::SetMouseDelay(const wchar_t *type, long delay, long *ret) {
@@ -299,45 +300,45 @@ void gosf::AutomationCore::SetMouseDelay(const wchar_t *type, long delay, long *
 }
 
 void gosf::AutomationCore::GetKeyState(long vk_code, long *ret) {
-    internal::set_result(ret, m_context->bkproc._keyboard->GetKeyState(vk_code));
+    internal::set_result(ret, m_context->bkproc.Keyboard(&KeyboardBackend::GetKeyState, vk_code));
 }
 
 void gosf::AutomationCore::KeyDown(long vk_code, long *ret) {
-    internal::set_result(ret, m_context->bkproc._keyboard->KeyDown(vk_code));
+    internal::set_result(ret, m_context->bkproc.Keyboard(&KeyboardBackend::KeyDown, vk_code));
 }
 
 void gosf::AutomationCore::KeyDownChar(const wchar_t *vk_code, long *ret) {
     internal::set_result(ret, 0L);
     key_combo_t combo;
     if (resolve_text_key_combo(m_context->vkmap, vk_code, combo))
-        internal::set_result(ret, key_combo_down(m_context->bkproc._keyboard.get(), combo));
+        internal::set_result(ret, m_context->bkproc.Keyboard(key_combo_down, combo));
 }
 
 void gosf::AutomationCore::KeyUp(long vk_code, long *ret) {
-    internal::set_result(ret, m_context->bkproc._keyboard->KeyUp(vk_code));
+    internal::set_result(ret, m_context->bkproc.Keyboard(&KeyboardBackend::KeyUp, vk_code));
 }
 
 void gosf::AutomationCore::KeyUpChar(const wchar_t *vk_code, long *ret) {
     internal::set_result(ret, 0L);
     key_combo_t combo;
     if (resolve_text_key_combo(m_context->vkmap, vk_code, combo))
-        internal::set_result(ret, key_combo_up(m_context->bkproc._keyboard.get(), combo));
+        internal::set_result(ret, m_context->bkproc.Keyboard(key_combo_up, combo));
 }
 
 void gosf::AutomationCore::WaitKey(long vk_code, long time_out, long *ret) {
     unsigned long t = time_out < 0 ? 0xffffffffu : static_cast<unsigned long>(time_out);
-    internal::set_result(ret, m_context->bkproc._keyboard->WaitKey(vk_code, t));
+    internal::set_result(ret, m_context->bkproc.Keyboard(&KeyboardBackend::WaitKey, vk_code, t));
 }
 
 void gosf::AutomationCore::KeyPress(long vk_code, long *ret) {
-    internal::set_result(ret, m_context->bkproc._keyboard->KeyPress(vk_code));
+    internal::set_result(ret, m_context->bkproc.Keyboard(&KeyboardBackend::KeyPress, vk_code));
 }
 
 void gosf::AutomationCore::KeyPressChar(const wchar_t *vk_code, long *ret) {
     internal::set_result(ret, 0L);
     key_combo_t combo;
     if (resolve_text_key_combo(m_context->vkmap, vk_code, combo))
-        internal::set_result(ret, key_combo_press(m_context->bkproc._keyboard.get(), combo));
+        internal::set_result(ret, m_context->bkproc.Keyboard(key_combo_press, combo));
 }
 
 void gosf::AutomationCore::SetKeypadDelay(const wchar_t *type, long delay, long *ret) {
@@ -363,7 +364,7 @@ void gosf::AutomationCore::KeyPressStr(const wchar_t *key_str, long delay, long 
         return;
     auto nlen = wcslen(key_str);
     for (size_t i = 0; i < nlen; ++i) {
-        const long key_ret = m_context->bkproc._keyboard->InputChar(key_str[i]);
+        const long key_ret = m_context->bkproc.Keyboard(&KeyboardBackend::InputChar, key_str[i]);
         internal::set_result(ret, key_ret);
         if (key_ret == 0)
             return;

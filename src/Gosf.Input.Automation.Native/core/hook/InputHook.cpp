@@ -1418,7 +1418,8 @@ LRESULT CALLBACK gosfWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lpar
         dispatch_right_button(hwnd, message, wparam, lparam) ||
         dispatch_xbutton(hwnd, message, wparam, lparam) ||
         dispatch_mouse_motion(hwnd, message, wparam, lparam) ||
-        dispatch_keyboard(hwnd, message, wparam, lparam)) return 1;
+        dispatch_keyboard(hwnd, message, wparam, lparam))
+        return wpf_input::TakeUnsupportedOleDrag() ? GOSF_UNSUPPORTED_OLE_DRAG : 1;
     if (wpf_input::SuppressMessage(message)) return 1;
     if ((InputHook::mouseLocked() && mouse_window_message(message)) ||
         (InputHook::keyboardLocked() && keyboard_window_message(message))) return 1;

@@ -11,9 +11,9 @@ int g_ref_count = 0;
 int g_input_ref_count = 0;
 
 void release_module_if_idle() {
-    if (g_ref_count == 0) {
-        ::FreeLibraryAndExitThread(static_cast<HMODULE>(RuntimeEnvironment::getInstance()), 0);
-    }
+    // The module may be owned by an in-process P/Invoke loader. Releasing hooks
+    // does not own that loader reference (or the caller's thread). Keep the
+    // already-loaded module available for subsequent bindings until process exit.
 }
 
 } // namespace

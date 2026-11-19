@@ -10,6 +10,7 @@ bool RequestCleanup();
 bool HandleCleanup(UINT message);
 void TranslateKey(WPARAM key, LPARAM lparam);
 bool ActiveThread();
+bool TakeUnsupportedOleDrag();
 void PrepareMessage(HWND hwnd, UINT message, LPARAM lparam, WNDPROC original);
 bool SuppressMessage(UINT message);
 }

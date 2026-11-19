@@ -5,6 +5,17 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-19
+
+### Fixed
+
+- Call hook exports directly when binding to a window in the current process.
+- Keep the native module loaded after unbinding without releasing a loader-owned reference or terminating the caller's thread.
+- Preserve failed cleanup state for retry, propagate mouse and keyboard unbind failures, and reject further input until cleanup succeeds.
+- Cancel unsupported WPF OLE drag-and-drop during virtual input and report the triggering input as failed instead of entering the desktop drag loop.
+
+## [0.1.0] - 2026-11-09
+
 ### Added
 
 - .NET Framework 4.6.2 target with automatic x86/x64 native deployment, Framework-compatible loading, and packaged input regressions on both architectures.
@@ -16,5 +27,3 @@ Versions follow [Semantic Versioning](https://semver.org/).
 - Native x86 and x64 backends derived from op 0.4.8.3 with pinned dependencies.
 - NuGet packaging, Windows CI, release publishing through Trusted Publishing (GitHub OIDC), and corresponding native source archives.
 - English documentation, contribution guidance, security reporting guidance, and issue templates.
-
-The first planned package version is `0.1.0`. No public release has been recorded yet.

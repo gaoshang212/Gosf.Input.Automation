@@ -37,7 +37,7 @@ long DxKeyboard::Bind(HWND hwnd, long mode) {
 }
 
 long DxKeyboard::UnBind() {
-    input_hook_client::UnBind(_hwnd);
+    if (input_hook_client::UnBind(_hwnd) != 1) return 0;
     _keys.fill(0);
     return KeyboardBackend::UnBind();
 }

@@ -3,6 +3,8 @@
 #include "../base/Utils.h"
 #include "../base/Environment.h"
 #include "HookModule.h"
+#include "HookExport.h"
+#include "InputHook.h"
 #include "BlackBone/Process/Process.h"
 #include "BlackBone/Process/RPC/RemoteFunction.hpp"
 #include <mutex>
@@ -23,6 +25,7 @@ long call_set_input_hook(HWND hwnd, int mode) {
     ::GetWindowThreadProcessId(hwnd, &pid);
     if (pid == 0)
         return 0;
+    if (pid == ::GetCurrentProcessId()) return ::SetInputHook(hwnd, mode);
 
     blackbone::Process proc;
     const NTSTATUS status = proc.Attach(pid);
@@ -64,6 +67,8 @@ long call_set_input_hook(HWND hwnd, int mode) {
 }
 
 long call_release_input_hook(HWND hwnd) {
+    if (gosf::hook::InputHook::is_hooked && gosf::hook::InputHook::input_hwnd == hwnd)
+        return ::ReleaseInputHook();
     DWORD pid = 0;
     ::GetWindowThreadProcessId(hwnd, &pid);
     if (pid == 0)
@@ -92,6 +97,8 @@ long call_release_input_hook(HWND hwnd) {
 }
 
 long call_set_input_lock(HWND hwnd, int lock) {
+    if (gosf::hook::InputHook::is_hooked && gosf::hook::InputHook::input_hwnd == hwnd)
+        return ::SetInputLock(lock);
     DWORD pid = 0;
     ::GetWindowThreadProcessId(hwnd, &pid);
     if (pid == 0)
@@ -185,11 +192,15 @@ long UnBind(HWND hwnd) {
     if (it == g_bind_refs.end())
         return 1;
 
-    if (--it->second > 0)
+    if (it->second > 1) {
+        --it->second;
         return 1;
+    }
 
+    const long result = call_release_input_hook(hwnd);
+    if (result != 1) return result;
     g_bind_refs.erase(it);
-    return call_release_input_hook(hwnd);
+    return 1;
 }
 
 long LockInput(HWND hwnd, int lock) {
