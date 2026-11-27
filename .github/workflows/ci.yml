@@ -26,7 +26,8 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
-          dotnet-version: 8.0.x
+          # windows-2022 provides the newer SDK and the .NET 8 desktop runtime used by the tests.
+          dotnet-version: 6.0.x
       - name: Validate package version
         id: version
         env:
@@ -55,7 +56,9 @@ jobs:
       - name: Test package contents and consumption
         env:
           PACKAGE_VERSION: ${{ steps.version.outputs.version }}
-        run: ./scripts/test-package.ps1 -PackageDirectory artifacts/packages -Version $env:PACKAGE_VERSION
+        run: |
+          ./scripts/test-package.ps1 -PackageDirectory artifacts/packages -Version $env:PACKAGE_VERSION -TargetFramework net6.0-windows
+          ./scripts/test-package.ps1 -PackageDirectory artifacts/packages -Version $env:PACKAGE_VERSION -TargetFramework net8.0-windows
       - name: Test net462 package on x86 and x64
         env:
           PACKAGE_VERSION: ${{ steps.version.outputs.version }}
@@ -98,9 +101,6 @@ jobs:
         with:
           name: packages
           path: packages
-      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
-        with:
-          dotnet-version: 8.0.x
       - name: Attach package and sources to GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}

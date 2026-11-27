@@ -5,6 +5,12 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-27
+
+### Added
+
+- Support for .NET 6 Windows applications. NuGet now ships `net462` and `net6.0-windows` assemblies. .NET 8 Windows applications automatically use the `net6.0-windows` assembly.
+
 ## [0.1.1] - 2026-11-19
 
 ### Fixed

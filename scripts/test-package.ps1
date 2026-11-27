@@ -3,7 +3,7 @@ param(
     [string]$PackageDirectory,
     [Parameter(Mandatory)]
     [string]$Version,
-    [ValidateSet('net8.0-windows', 'net462')]
+    [ValidateSet('net8.0-windows', 'net6.0-windows', 'net462')]
     [string]$TargetFramework = 'net8.0-windows',
     [ValidateSet('x86', 'x64')]
     [string]$Platform = 'x64'
@@ -18,7 +18,7 @@ function Assert-PackageContents {
     try {
         foreach ($required in @('runtimes/win-x86/native/Gosf.Input.Automation.Native.x86.dll',
             'runtimes/win-x64/native/Gosf.Input.Automation.Native.x64.dll', 'README.md', 'LICENSE',
-            'lib/net462/Gosf.Input.Automation.dll', 'lib/net8.0-windows7.0/Gosf.Input.Automation.dll',
+            'lib/net462/Gosf.Input.Automation.dll', 'lib/net6.0-windows7.0/Gosf.Input.Automation.dll',
             'build/net462/Gosf.Input.Automation.targets', 'buildTransitive/net462/Gosf.Input.Automation.targets',
             'CHANGELOG.md', 'THIRD-PARTY-NOTICES.md', 'licenses/wow64ext-lgpl-3.0.txt', 'docs/NATIVE-REBUILD.md')) {
             if (-not $zip.GetEntry($required)) { throw "Package entry missing: $required" }
